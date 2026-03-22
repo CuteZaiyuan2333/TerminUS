@@ -43,9 +43,9 @@ TerminUS 内核采用“极简内核”设计，其核心逻辑（Wasm 模块）
 ## 4. 分步骤开发计划 (Development Phases)
 
 ### 阶段 1: 内核启动与首个 TEP 加载 (Kernel Boot & First TEP)
-- [ ] 在 Guest 空间实现基础的 `tus_spawn` 系统调用。
-- [ ] 实现内核从内存缓冲区（Mock）加载并启动一个简单的 `.wasm` 应用。
-- [ ] 验证父子 Wasm 实例间的内存隔离。
+- [x] 在 Guest 空间实现基础的 `tus_spawn` 系统调用。
+- [x] 实现内核从内存缓冲区（Mock）加载并启动一个简单的 `.wasm` 应用。
+- [x] 验证父子 Wasm 实例间的内存隔离。
 
 ### 阶段 2: 显卡驱动与物理窗口对接 (Graphics Driver & Windowing)
 - [ ] 在内核中实现 GPU 资源管理器，支持按应用隔离 Buffer ID。
@@ -53,9 +53,9 @@ TerminUS 内核采用“极简内核”设计，其核心逻辑（Wasm 模块）
 - [ ] 验证：应用能在保持终端正常交互的同时，在桌面上额外弹出一个实时渲染的 3D 或 2D 窗口。
 
 ### 阶段 3: 虚拟文件系统 (VFS) 与 EVD 对接
-- [ ] 实现 VFS Server，支持基本的 `ls`, `cd`, `read`, `write` 内部调用。
-- [ ] 将 VFS 读写逻辑通过 ABI 对接到宿主机的 `disk.evd` 加密磁盘。
-- [ ] 验证：在重启虚拟机后，Guest 内部创建的文件依然存在且被加密。
+- [x] 实现 VFS Server，支持基本的 `ls`, `cd`, `read`, `write` 内部调用。
+- [x] 将 VFS 读写逻辑通过 ABI 对接到宿主机的 `disk.evd` 加密磁盘。
+- [x] 验证：在重启虚拟机后，Guest 内部创建的文件依然存在且被加密。
 
 ### 3 阶段: 多窗口 TUI 合成器 (TUI Compositor)
 - [ ] 开发 Compositor 服务，支持在单个终端内“分屏”显示两个不同的应用输出。

@@ -10,6 +10,7 @@ use core::panic::PanicInfo;
 unsafe extern "C" {
     fn vm_terminal_write(ptr: u32, len: u32);
     fn vm_proc_spawn(ptr: u32, len: u32) -> u32;
+    fn vm_gpu_open_window(ptr: u32, len: u32) -> u32;
 }
 
 fn kprint(msg: &str) {
@@ -19,6 +20,11 @@ fn kprint(msg: &str) {
 #[unsafe(no_mangle)]
 pub extern "C" fn tus_spawn(wasm_ptr: u32, wasm_len: u32) -> u32 {
     unsafe { vm_proc_spawn(wasm_ptr, wasm_len) }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn tus_gpu_open_window(title_ptr: u32, title_len: u32) -> u32 {
+    unsafe { vm_gpu_open_window(title_ptr, title_len) }
 }
 
 // --- 内核入口点 ---
@@ -43,17 +49,21 @@ pub extern "C" fn main() {
         kprint("[Kernel] /etc/config.txt not found!\r\n");
     }
 
-    // 模拟一个简单的 TEP 加载请求
-    // 实际上这里会从 VFS 读取 .wasm 文件
-    let mock_wasm = [0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]; // WASM 幻数
-    kprint("[Kernel] Loading mock TEP (Init shell)...\r\n");
+    // 从 VFS 加载真实的 TEP 应用
+    kprint("[Kernel] Loading /bin/init.wasm from VFS...\r\n");
+    let mut wasm_buf = [0u8; 8192]; // 假设应用小于 8KB
+    let wasm_len = vfs::Vfs::read_file("/bin/init.wasm", &mut wasm_buf);
     
-    let res = tus_spawn(mock_wasm.as_ptr() as u32, mock_wasm.len() as u32);
-    
-    if res == 0 {
-        kprint("[Kernel] Child process successfully proxied to Host.\r\n");
+    if wasm_len > 0 {
+        kprint("[Kernel] Launching /bin/init.wasm...\r\n");
+        let res = tus_spawn(wasm_buf.as_ptr() as u32, wasm_len as u32);
+        if res == 0 {
+            kprint("[Kernel] Init process started.\r\n");
+        } else {
+            kprint("[Kernel] Failed to spawn init process.\r\n");
+        }
     } else {
-        kprint("[Kernel] Failed to spawn process.\r\n");
+        kprint("[Kernel] /bin/init.wasm not found in VFS. Skipping TEP boot.\r\n");
     }
 
     // IPC 自检

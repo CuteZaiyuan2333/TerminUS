@@ -77,6 +77,8 @@ impl Vfs {
         
         // Setup initial directories/files
         Self::create_file("/etc/config.txt", b"TerminUS IPC Enabled\n");
+        // Placeholder for init.wasm (WASM Magic + Version)
+        Self::create_file("/bin/init.wasm", &[0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
     }
 
     fn read_fat() -> [u32; 1024] {
