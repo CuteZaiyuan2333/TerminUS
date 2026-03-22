@@ -1,0 +1,10 @@
+[package]
+name = "terminus-kernel"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# 内核目前保持极简，暂无外部依赖
