@@ -10,7 +10,7 @@
 unsafe extern "C" {
     fn vm_terminal_write(ptr: u32, len: u32);
     fn vm_ipc_send(target_pid: u32, ptr: u32, len: u32) -> u32;
-    fn vm_ipc_recv(buf_ptr: u32, buf_max_len: u32) -> u32;
+    fn vm_ipc_recv(pid: u32, buf_ptr: u32, buf_max_len: u32) -> u32;
 }
 
 fn kprint(msg: &str) {
@@ -76,8 +76,8 @@ impl Ipc {
     }
 
     /// 尝试接收一条消息，返回 (header, payload_len)
-    pub fn receive_message(buf: &mut [u8]) -> Option<(MessageHeader, usize)> {
-        let bytes_read = unsafe { vm_ipc_recv(buf.as_mut_ptr() as u32, buf.len() as u32) };
+    pub fn receive_message(pid: u32, buf: &mut [u8]) -> Option<(MessageHeader, usize)> {
+        let bytes_read = unsafe { vm_ipc_recv(pid, buf.as_mut_ptr() as u32, buf.len() as u32) };
 
         if bytes_read < 8 {
             return None;
@@ -110,7 +110,7 @@ impl Ipc {
         }
 
         let mut recv_buf = [0u8; 256];
-        match Self::receive_message(&mut recv_buf) {
+        match Self::receive_message(0, &mut recv_buf) {
             Some((header, len)) => {
                 if header.msg_type == MSG_TYPE_PING && &recv_buf[..len] == b"Ping" {
                     kprint("[IPC] Self-test PASSED: Received Ping loopback.\r\n");

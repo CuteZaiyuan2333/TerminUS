@@ -24,16 +24,7 @@ pub struct DirEntry {
     pub reserved: [u8; 24],
 }
 
-impl DirEntry {
-    fn empty() -> Self {
-        Self {
-            name: [0; 32],
-            start_block: 0,
-            size: 0,
-            reserved: [0; 24],
-        }
-    }
-}
+
 
 pub struct Vfs;
 
@@ -175,6 +166,51 @@ impl Vfs {
             }
         }
         kprint("[VFS] Error: Root directory full.\r\n");
+    }
+
+    /// 删除一个文件
+    pub fn delete_file(path: &str) -> bool {
+        let mut dir_buf = [0u8; BLOCK_SIZE];
+        unsafe { vm_storage_read(ROOT_DIR_BLOCK, dir_buf.as_mut_ptr() as u32); }
+        
+        let path_bytes = path.as_bytes();
+        
+        for i in 0..64 {
+            let offset = i * 64;
+            if dir_buf[offset] == 0 { continue; }
+            
+            let mut name_len = 0;
+            while name_len < 32 && dir_buf[offset + name_len] != 0 {
+                name_len += 1;
+            }
+            if name_len == path_bytes.len() && &dir_buf[offset..offset+name_len] == path_bytes {
+                let start_block = u32::from_le_bytes([dir_buf[offset+32], dir_buf[offset+33], dir_buf[offset+34], dir_buf[offset+35]]);
+                
+                // 释放 FAT 链
+                let mut fat = Self::read_fat();
+                let mut current = start_block;
+                while current != 0xFFFFFFFF && (current as usize) < 1024 {
+                    let next = fat[current as usize];
+                    fat[current as usize] = 0; // 标记为空闲
+                    current = next;
+                }
+                Self::write_fat(&fat);
+                
+                // 清除目录项
+                for b in dir_buf[offset..offset+64].iter_mut() { *b = 0; }
+                unsafe { vm_storage_write(ROOT_DIR_BLOCK, dir_buf.as_ptr() as u32); }
+                
+                kprint("[VFS] File deleted.\r\n");
+                return true;
+            }
+        }
+        false
+    }
+
+    /// 写入/覆盖文件内容（先删后建策略）
+    pub fn write_file(path: &str, data: &[u8]) {
+        Self::delete_file(path);
+        Self::create_file(path, data);
     }
 
     pub fn read_file(path: &str, out_buf: &mut [u8]) -> usize {
