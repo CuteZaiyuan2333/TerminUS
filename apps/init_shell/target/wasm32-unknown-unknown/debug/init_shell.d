@@ -1,1 +1,0 @@
-/Users/cutezaiyuan2333/Documents/keterminator/wasm64-complete-machine/terminus/apps/init_shell/target/wasm32-unknown-unknown/debug/init_shell.wasm: /Users/cutezaiyuan2333/Documents/keterminator/wasm64-complete-machine/terminus/apps/init_shell/src/lib.rs
